@@ -59,6 +59,12 @@ public:
             MaskMissingGradientColumnsToZero(fr);
 
         inputGradient.AddCopyOf(gradient);
+
+        char buffer[100];
+        std::wcstombs(buffer, m_nodeName.c_str(), m_nodeName.length());
+        fprintf(stderr, "plus %zd\n", inputIndex);
+        Input(inputIndex)->Gradient().Print(buffer, -3, -3, -3, -3);
+        Gradient().Print(buffer, -3, -3, -3, -3);
     }
 };
 

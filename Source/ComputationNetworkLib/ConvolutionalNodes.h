@@ -128,30 +128,41 @@ public:
     {
         auto sliceOutputGrad = GradientFor(fr);
 
+        char buffer[100];
+        std::wcstombs(buffer, m_nodeName.c_str(), m_nodeName.length());
         if (m_poolKind == PoolKind::None)
         {
-        if (inputIndex == 0) // derivative with respect to the weight matrix
-        {
-            auto& grad = Input(0)->GradientAsMatrix();
+            fprintf(stderr, "\n%s conv %zd\n", buffer, inputIndex);
+            if (inputIndex == 0) // derivative with respect to the weight matrix
+            {
+                auto& grad = Input(0)->GradientAsMatrix();
                 auto sliceInput1Value = Input(1)->ValueFor(fr);
                 m_convEng->BackwardKernel(sliceOutputGrad, sliceInput1Value, grad, fr.IsAllFrames(), *m_tempMatrix);
-        }
-        else if (inputIndex == 1) // derivative with respect to the input feature
-        {
-            auto& input0 = Input(0)->ValueAsMatrix();
-            auto sliceInput1Grad = Input(1)->GradientFor(fr);
+                sliceInput1Value.Print("sliceInput1Value", -3, -3, -3, -3);
+            }
+            else if (inputIndex == 1) // derivative with respect to the input feature
+            {
+                auto& input0 = Input(0)->ValueAsMatrix();
+                auto sliceInput1Grad = Input(1)->GradientFor(fr);
                 m_convEng->BackwardData(sliceOutputGrad, input0, sliceInput1Grad, *m_tempMatrix);
+                input0.Print("input0", -3, -3, -3, -3);
+                sliceInput1Grad.Print("sliceInput1Value", -3, -3, -3, -3);
+            }
         }
-    }
         else
         {
+            fprintf(stderr, "pool %zd\n", inputIndex);
             Matrix<ElemType> sliceInput0Grad = Input(0)->GradientFor(fr);
 
             Matrix<ElemType> sliceInput0Value = Input(0)->ValueFor(fr);
             Matrix<ElemType> sliceOutputValue = ValueFor(fr);
 
             m_convEng->BackwardPooling(sliceOutputValue, sliceOutputGrad, sliceInput0Value, sliceInput0Grad);
+            sliceInput0Grad.Print(buffer, -3, -3, -3, -3);
+            sliceInput0Value.Print(buffer, -3, -3, -3, -3);
+            sliceOutputValue.Print(buffer, -3, -3, -3, -3);
         }
+        sliceOutputGrad.Print("sliceOutputGrad", -3, -3, -3, -3);
     }
 
     bool OutputUsedInComputingInputNodesGradients() const override

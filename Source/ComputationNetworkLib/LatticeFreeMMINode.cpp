@@ -457,6 +457,8 @@ double LatticeFreeMMINode<ElemType>::CalculateNumeratorsWithCE(const Matrix<Elem
         }
     }
 
+    fprintf(stderr, "Forward score %lf\n", logForwardScore);
+
 #ifdef _DEBUG
     cout << "log forward score: " << logForwardScore << endl;
     double logBackwardScore = m_betas[0] + m_likelihoodBuffer[m_senoneSequence[0].Senone];
@@ -491,7 +493,9 @@ double LatticeFreeMMINode<ElemType>::CalculateNumeratorsWithCE(const Matrix<Elem
         }
 
         ElemType ce = Matrix<ElemType>::InnerProductOfMatrices(*m_posteriorsNum, *m_softmax);   // m_softmax is with logSoftmax of the NN output
-        return (1 - m_ceweight) * logForwardScore - m_ceweight * (logSum - ce);
+        double scoreToReturn = (1 - m_ceweight) * logForwardScore - m_ceweight * (logSum - ce);
+        fprintf(stderr, "NUM score to return %lf\n", scoreToReturn);
+        return scoreToReturn;
     }
 }
 
@@ -589,6 +593,7 @@ double LatticeFreeMMINode<ElemType>::ForwardBackwardProcessForDenorminator(const
 #endif
     if (std::isnan(logForwardPath))
         RuntimeError("logForwardPath in denorminator should not be nan.");
+    fprintf(stderr, "DEN score to return %lf\n", logForwardPath);
     return logForwardPath;
 }
 

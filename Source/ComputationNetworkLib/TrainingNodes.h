@@ -1691,6 +1691,9 @@ public:
 
     void BackpropTo(const size_t inputIndex, const FrameRange& fr) override
     {
+        char buffer[100];
+        std::wcstombs(buffer, m_nodeName.c_str(), m_nodeName.length());
+        fprintf(stderr, "bn %s index: %zd\n", buffer, inputIndex);
         if (inputIndex == 0) // derivative with respect to the input.
         {
             auto sliceOutputGrad = GradientFor(fr);
@@ -1704,18 +1707,23 @@ public:
             // Compute all derivatives in one step. Save derivatives with respect to scale and bias in temp matrices.
             m_bnEng->Backward(sliceInputValue, sliceOutputGrad, sliceInputGrad, scale,
                                               *m_saveMean, *m_saveInvStdDev, *m_dScale, *m_dBias);
+
+            sliceOutputGrad.Print("sliceOutputGrad", -3, -3, -3, -3);
         }
         else if (inputIndex == 1) // derivative with respect to the scale
         {
             // Derivative with respect to the scale was precomputed during input derivative computation.
             Matrix<ElemType>& grad = Input(1)->Gradient();
             grad.SetValue(grad.GetNumRows(), grad.GetNumCols(), grad.GetDeviceId(), m_dScale->Data());
+
+            grad.Print(buffer, -3, -3, -3, -3);
         }
         else if (inputIndex == 2) // derivative with respect to the bias
         {
             // Derivative with respect to the bias was precomputed during input derivative computation.
             Matrix<ElemType>& grad = Input(2)->Gradient();
             grad.SetValue(grad.GetNumRows(), grad.GetNumCols(), grad.GetDeviceId(), m_dBias->Data());
+            grad.Print(buffer, -3, -3, -3, -3);
         }
         // No derivatives with respect to running mean and InvStdDev.
     }
